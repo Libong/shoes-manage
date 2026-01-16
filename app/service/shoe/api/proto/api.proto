@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package com.liBong.shoeManager.service;
+
+option go_package = "./;api";
+
+import "google/protobuf/empty.proto";
+
+service ShoeService {
+  rpc addShoe (AddShoeReq) returns (google.protobuf.Empty);
+  rpc deleteShoe (DeleteShoeReq) returns (google.protobuf.Empty);
+  rpc updateShoe (UpdateShoeReq) returns (google.protobuf.Empty);
+  rpc searchShoesPage (SearchShoesPageReq) returns (SearchShoesPageResp);
+  rpc countShoe (CountShoesReq) returns (CountShoesResp);
+  rpc shoeById (ShoeByIdReq) returns (ShoeByIdResp);
+  rpc shoesByIds (ShoesByIdsReq) returns (ShoesByIdsResp);
+  rpc batchUpdateShoe (BatchUpdateShoeReq) returns (google.protobuf.Empty);
+
+  /*用户关联*/
+  rpc batchAddAccountShoe (BatchAddAccountShoeReq) returns (google.protobuf.Empty);
+  rpc deleteAccountShoe (DeleteAccountShoeReq) returns (google.protobuf.Empty);
+  rpc searchAccountShoes (SearchAccountShoesReq) returns (SearchAccountShoesResp);
+}
+
+message AddShoeReq{
+  string shape_code = 2; // 形体编码
+  string material = 3; // 材质
+  string shoe_size = 4; // 鞋子码数
+  string pictures = 5; // 图片
+  string videos = 6; // 视频
+  uint32 is_hot = 7; //是否热门 1是 2否
+  uint32 is_presale = 8;//是否预售 1是 2否
+}
+message DeleteShoeReq{
+  repeated string ids = 1;
+}
+message UpdateShoeReq{
+  string shoe_id = 1; // 鞋子编号
+  string shape_code = 2; // 形体编码
+  string material = 3; // 材质
+  string shoe_size = 4; // 鞋子码数
+  string pictures = 5; // 图片
+  string videos = 6; // 视频
+  uint32 is_hot = 7; //是否热门 1是 2否
+  uint32 is_presale = 8;//是否预售 1是 2否
+
+  repeated string zero_fields = 100;
+  bool handle_zero = 101;
+}
+message Shoe {
+  string shoe_id = 1; // 鞋子编号
+  string shape_code = 2; // 形体编码
+  string material = 3; // 材质
+  string shoe_size = 4; // 鞋子码数
+  string pictures = 5; // 图片
+  string videos = 6; // 视频
+  uint32 is_hot = 7; //是否热门 1是 2否
+  uint32 is_presale = 8;//是否预售 1是 2否
+
+  int64 establish_at = 91;
+  int64 modify_at = 92;
+}
+message SearchShoeCondition{
+  string shape_code = 1; // 形体编码
+  string material = 2; // 材质
+  string shoe_size = 3; // 鞋子码数
+  uint32 is_hot = 4; //是否热门 1是 2否
+  uint32 is_presale = 5;//是否预售 1是 2否
+}
+message SearchShoesPageReq{
+  SearchShoeCondition condition = 1;
+
+  string content_field = 96; //content里字段名称 json格式
+  repeated string content_field_values = 97; //字段的值
+  bool sort_asc = 98;
+  string sort_field = 99;
+  uint32 page_size = 100;
+  uint32 page_num = 101;
+}
+message SearchShoesPageResp{
+  repeated Shoe list = 1;
+}
+message CountShoesReq{
+  SearchShoeCondition condition = 1;
+  string content_field = 96; //content里字段名称 json格式
+  repeated string content_field_values = 97; //字段的值
+}
+message CountShoesResp{
+  int64 total = 1;
+}
+message ShoeByIdReq{
+  string id = 1;
+}
+message ShoeByIdResp{
+  Shoe shoe = 1;
+}
+message ShoesByIdsReq{
+  repeated string ids = 1;
+}
+message ShoesByIdsResp{
+  map<string,Shoe> map = 1;
+}
+message BatchUpdateShoeReq{
+  repeated string ids = 1;
+  uint32 is_hot = 2; //是否热门 1是 2否
+}
+message AccountShoe{
+  string account_id = 1;
+  string shoe_id = 2;
+}
+message BatchAddAccountShoeReq{
+  repeated AccountShoe list = 1;
+}
+message DeleteAccountShoeReq{
+  repeated string account_ids = 1;
+  repeated string shoe_ids = 2;
+}
+message SearchAccountShoesReq{
+  repeated string account_ids = 1;
+  repeated string shoe_ids = 2;
+
+  uint32 page_size = 100;
+  uint32 page_num = 101;
+}
+message SearchAccountShoesResp{
+  repeated AccountShoe list = 1;
+  int64 total = 2;
+}

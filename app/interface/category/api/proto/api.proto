@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package com.liBong.common.interface.category;
+
+option go_package = "./;api";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "router/api/proto/router.proto";
+import "auth/api/proto/auth.proto";
+
+service CategoryInterface{
+
+  option(libong.prefix) = "libong/manager/api/category";
+
+  // 添加标签
+  rpc addCategory(AddCategoryReq) returns(google.protobuf.Empty) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/add"
+    };
+  }
+
+  // 更新标签
+  rpc updateCategory(UpdateCategoryReq) returns(google.protobuf.Empty) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/update"
+    };
+  }
+
+  // 标签详情
+  rpc categoryById(CategoryByIdReq) returns(CategoryByIdResp) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      get:"/get"
+    };
+  }
+  //分页查询
+  rpc searchCategoriesPage(SearchCategoriesPageReq)returns(SearchCategoriesPageResp){
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      get:"/search/page"
+    };
+  }
+}
+message AddCategoryReq{
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+}
+message UpdateCategoryReq{
+  string category_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+}
+message DeleteCategoryReq{
+  string category_id = 1; // 标签编号
+}
+message SearchCategoriesPageReq{
+  string category_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+
+  uint32 page_num = 100;
+  uint32 page_size = 101;
+}
+message SearchCategoriesPageResp{
+  repeated Category list = 1;
+  int64 total = 2;
+}
+message Category {
+  string category_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+}
+message CategoryByIdReq{
+  string category_id = 1; // 标签编号
+}
+message CategoryByIdResp{
+  string category_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+}

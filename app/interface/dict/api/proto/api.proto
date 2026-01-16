@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package com.liBong.common.interface.dict;
+
+option go_package = "./;api";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "router/api/proto/router.proto";
+import "auth/api/proto/auth.proto";
+
+service DictInterface{
+
+  option(libong.prefix) = "libong/manager/api/dict";
+
+  // 添加字典
+  rpc addDict(AddDictReq) returns(google.protobuf.Empty) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/add"
+    };
+  }
+
+  // 更新字典
+  rpc updateDict(UpdateDictReq) returns(google.protobuf.Empty) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/update"
+    };
+  }
+
+  // 字典详情
+  rpc dictById(DictByIdReq) returns(DictByIdResp) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      get:"/get"
+    };
+  }
+  //分页查询
+  rpc searchDictionariesPage(SearchDictionariesPageReq)returns(SearchDictionariesPageResp){
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      get:"/search/page"
+    };
+  }
+}
+message AddDictReq{
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+  string dict_value = 5;//值
+}
+message UpdateDictReq{
+  string dict_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+  string dict_value = 5;//值
+}
+message DeleteDictReq{
+  string dict_id = 1; // 字典编号
+}
+message SearchDictionariesPageReq{
+  string dict_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+
+  uint32 page_num = 100;
+  uint32 page_size = 101;
+}
+message SearchDictionariesPageResp{
+  repeated Dict list = 1;
+  int64 total = 2;
+}
+message Dict {
+  string dict_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+  string dict_value = 5;//值
+}
+message DictByIdReq{
+  string dict_id = 1; // 字典编号
+}
+message DictByIdResp{
+  string dict_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+  string dict_value = 5;//值
+}

@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package com.libong.commmon.service.category;
+
+option go_package = "./;api";
+
+import "google/protobuf/empty.proto";
+
+service CategoryService{
+
+  /*-----------------分类-----------------*/
+  //添加分类
+  rpc addCategory(AddCategoryReq)returns(AddCategoryResp){}
+  //修改分类
+  rpc updateCategory(UpdateCategoryReq)returns(google.protobuf.Empty){}
+  //删除分类
+  rpc deleteCategory(DeleteCategoryReq)returns(google.protobuf.Empty){}
+  //分类详情
+  rpc categoryByID(CategoryByIDReq)returns(CategoryByIDResp){}
+  //分页查询
+  rpc searchCategoriesPage(SearchCategoriesPageReq)returns(SearchCategoriesPageResp){}
+  //查询分类总数
+  rpc countCategory(CountCategoryReq)returns(CountCategoryResp){}
+  //分类详情
+  rpc categoriesByIds(CategoriesByIdsReq)returns(CategoriesByIdsResp){}
+}
+message AddCategoryReq{
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+}
+message AddCategoryResp{
+  string id = 1;
+}
+message UpdateCategoryReq{
+  string category_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+
+  bool handle_zero = 90; //是否处理零值 需要在dao层进行判断 为true时只能传可以被设置为零值的字段
+  repeated string zero_fields = 91; //要处理的字段json
+}
+message DeleteCategoryReq{
+  string id = 1;
+}
+message CategoryByIDReq{
+  string id = 1;
+}
+message CategoryByIDResp{
+   Category category = 1;
+}
+message Category{
+  string category_id = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+}
+message CategoryCondition{
+ repeated string category_ids = 1; //分类编号
+  string name = 2; //分类名称
+  string identifier = 3; //标识符
+}
+message SearchCategoriesPageReq{
+  CategoryCondition condition = 1;
+
+  uint32 page_num = 100;
+  uint32 page_size = 101;
+}
+message SearchCategoriesPageResp{
+  repeated Category list = 1;
+}
+message CountCategoryReq{
+  CategoryCondition condition = 1;
+}
+message CountCategoryResp{
+  int64 total = 1;
+}
+message CategoriesByIdsReq{
+  repeated string ids = 1; //分类编号
+}
+message CategoriesByIdsResp{
+  map<string,Category> map = 1;
+}

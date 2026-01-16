@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package com.liBong.shoeManager.interface;
+
+option go_package = "./;api";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "router/api/proto/router.proto";
+import "auth/api/proto/auth.proto";
+
+service ShoeInterface{
+
+  option(libong.prefix) = "libong/manager/api/shoe";
+
+  // 添加鞋
+  rpc addShoe(AddShoeReq) returns(google.protobuf.Empty) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/add"
+    };
+  }
+
+  // 更新鞋
+  rpc updateShoe(UpdateShoeReq) returns(google.protobuf.Empty) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/update"
+    };
+  }
+
+  // 删除鞋
+  rpc deleteShoe(DeleteShoeReq) returns(google.protobuf.Empty) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/delete"
+    };
+  }
+
+  // 分页查询
+  rpc searchShoesPage(SearchShoesPageReq) returns(SearchShoesPageResp) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      get:"/search/page"
+    };
+  }
+
+  // 鞋详情
+  rpc shoeById(ShoeByIdReq) returns(ShoeByIdResp) {
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      get:"/get"
+    };
+  }
+
+  //批量更新鞋是否热门
+  rpc updateShoeHot(UpdateShoeHotReq) returns(google.protobuf.Empty){
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/update/hot"
+    };
+  }
+  //收藏鞋
+  rpc changeShoeFavour(ChangeShoeFavourReq) returns(google.protobuf.Empty){
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      post:"/favour"
+    };
+  }
+}
+message AddShoeReq{
+  string shape_code = 2; // 形体编码
+  string material = 3; // 材质
+  string shoe_size = 4; // 鞋子码数
+  repeated File pictures = 5; // 图片
+  repeated File videos = 6; // 视频
+  uint32 is_hot = 7; //是否热门 1是 2否
+  uint32 is_presale = 8;//是否预售 1是 2否
+}
+message UpdateShoeReq{
+  string shoe_id = 1; // 鞋子编号
+  string shape_code = 2; // 形体编码
+  string material = 3; // 材质
+  string shoe_size = 4; // 鞋子码数
+  repeated File pictures = 5; // 图片
+  repeated File videos = 6; // 视频
+  uint32 is_hot = 7; //是否热门 1是 2否
+  uint32 is_presale = 8;//是否预售 1是 2否
+}
+message DeleteShoeReq{
+  string shoe_id = 1; // 鞋子编号
+}
+message SearchShoesPageReq{
+  string shape_code = 1; // 形体编码
+  string material = 2; // 材质
+  string shoe_size = 3; // 鞋子码数
+  uint32 is_hot = 4; //是否热门 1是 2否
+  uint32 is_presale = 5;//是否预售 1是 2否
+  bool by_favour = 6; //收藏的
+
+  uint32 page_num = 100;
+  uint32 page_size = 101;
+}
+message SearchShoesPageResp{
+  repeated Shoe list = 1;
+  int64 total = 2;
+}
+message Shoe {
+  string shoe_id = 1; // 鞋子编号
+  string shape_code = 2; // 形体编码
+  string material = 3; // 材质
+  string shoe_size = 4; // 鞋子码数
+  repeated FileResp pictures = 5; // 图片 格式
+  repeated FileResp videos = 6; // 视频
+  uint32 is_hot = 7; //是否热门 1是 2否
+  uint32 is_presale = 8;//是否预售 1是 2否
+  bool is_favour = 9; //是否收藏
+}
+message ShoeByIdReq{
+  string shoe_id = 1; // 鞋子编号
+}
+message ShoeByIdResp{
+  string shoe_id = 1; // 鞋子编号
+  string shape_code = 2; // 形体编码
+  string material = 3; // 材质
+  string shoe_size = 4; // 鞋子码数
+  repeated FileResp pictures = 5; // 图片 格式
+  repeated FileResp videos = 6; // 视频
+  uint32 is_hot = 7; //是否热门 1是 2否
+  uint32 is_presale = 8;//是否预售 1是 2否
+  bool is_favour = 9; //是否收藏
+}
+message File{
+  string id = 1;
+  string name = 2;
+}
+message FileResp{
+  string id = 1;
+  string name = 2;
+  string url = 3;
+}
+message UpdateShoeHotReq{
+  repeated string shoe_ids = 1;
+  uint32 is_hot = 2; //是否热门 1是 2否
+}
+message ChangeShoeFavourReq{
+  repeated string shoe_ids = 1;
+  bool is_favour = 2; //是否收藏
+}

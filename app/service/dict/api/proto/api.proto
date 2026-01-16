@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package com.libong.commmon.service.dict;
+
+option go_package = "./;api";
+
+import "google/protobuf/empty.proto";
+
+service dictService{
+
+  /*-----------------字典-----------------*/
+  //添加字典
+  rpc addDict(AddDictReq)returns(AddDictResp){}
+  //修改字典
+  rpc updateDict(UpdateDictReq)returns(google.protobuf.Empty){}
+  //删除字典
+  rpc deleteDict(DeleteDictReq)returns(google.protobuf.Empty){}
+  //字典详情
+  rpc dictByID(DictByIDReq)returns(DictByIDResp){}
+  //分页查询
+  rpc searchDictionariesPage(SearchDictionariesPageReq)returns(SearchDictionariesPageResp){}
+  //查询字典总数
+  rpc countDict(CountDictReq)returns(CountDictResp){}
+  //字典详情
+  rpc dictionariesByIds(DictionariesByIdsReq)returns(DictionariesByIdsResp){}
+}
+message AddDictReq{
+  string name = 2; //字典名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+  string dict_value = 5;//值
+}
+message AddDictResp{
+  string id = 1;
+}
+message UpdateDictReq{
+  string Dict_id = 1; //字典编号
+  string name = 2; //字典名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+  string dict_value = 5;//值
+
+  bool handle_zero = 90; //是否处理零值 需要在dao层进行判断 为true时只能传可以被设置为零值的字段
+  repeated string zero_fields = 91; //要处理的字段json
+}
+message DeleteDictReq{
+  string id = 1;
+}
+message DictByIDReq{
+  string id = 1;
+}
+message DictByIDResp{
+   Dict Dict = 1;
+}
+message Dict{
+  string dict_id = 1; //字典编号
+  string name = 2; //字典名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+  string dict_value = 5;//值
+}
+message DictCondition{
+ repeated string Dict_ids = 1; //字典编号
+  string name = 2; //字典名称
+  string identifier = 3; //标识符
+  string dict_type = 4; //类型
+}
+message SearchDictionariesPageReq{
+  DictCondition condition = 1;
+
+  uint32 page_num = 100;
+  uint32 page_size = 101;
+}
+message SearchDictionariesPageResp{
+  repeated Dict list = 1;
+}
+message CountDictReq{
+  DictCondition condition = 1;
+}
+message CountDictResp{
+  int64 total = 1;
+}
+message DictionariesByIdsReq{
+  repeated string ids = 1; //字典编号
+}
+message DictionariesByIdsResp{
+  map<string,Dict> map = 1;
+}
