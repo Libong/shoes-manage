@@ -7,12 +7,9 @@ replace google.golang.org/protobuf => google.golang.org/protobuf v1.25.0
 replace google.golang.org/grpc => google.golang.org/grpc v1.58.3
 
 replace (
-	//libong/common => github.com/Libong/common v0.0.0-20250909172133-089059d32f0b //main
-	libong/common => /Users/libeng/Documents/go/Project/libongCommon
-	libong/login => /Users/libeng/Documents/go/Project/login
-	//libong/login => github.com/Libong/login v0.0.0-20250905100811-30d4268502d4 //main
-	//libong/rbac => github.com/Libong/rbac v0.0.0-20250905101149-be2f5f9d0614 //main
-	libong/rbac => /Users/libeng/Documents/go/Project/rbac
+	libong/common => github.com/Libong/common v0.0.0-20260116171319-10fbe63bfcfb //main
+	libong/login => github.com/Libong/login v0.0.0-20260116175113-3a9974574a14 //main
+	libong/rbac => github.com/Libong/rbac v0.0.0-20260116175001-19b16567f9bc //main
 
 )
 
@@ -56,7 +53,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.1 // indirect
-	github.com/redis/go-redis/v9 v9.2.1 // indirect
+	github.com/redis/go-redis/v9 v9.7.3 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
