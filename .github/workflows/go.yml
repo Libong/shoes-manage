@@ -1,0 +1,79 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: GOGOGO
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  WORK_PATH: "/app/interface/gateway/cmd/main.go"
+
+jobs:
+  #定义工作流名称
+  build:
+    name: GOGOGO
+    #运行任务的虚拟环境
+    runs-on: ubuntu-latest
+    #运行任务的最大分钟数
+    timeout-minutes: 3
+    #步骤
+    steps:
+      #获取源代码并存放在/home/runner/work/repo/repo下 repo为仓库名称
+      - name: Check out Go
+        uses: actions/checkout@v3
+        #安装go环境
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: false
+        #缓存Go的依赖 太大了
+        #    - name: Cache Go Modules
+        #      uses: actions/cache@v2
+        #      with:
+        #        path: ~/go/pkg/mod
+        #        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        #        restore-keys: |
+        #          ${{ runner.os }}-go-
+        #设置环境变量 适用于私有库的依赖访问 很怪这里设置ignore无效放到dockerfile里设置了
+      - name: make env
+        shell: bash
+        run: |
+          export GO111MODULE=on
+          export CGO_ENABLED=0
+          export GOPRIVATE=github.com/Libong
+          export GOPROXY=https://goproxy.cn,direct
+          export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=ignore 
+          git config --global url."https://libong:${{secrets.GO_MOD}}@github.com".insteadOf "https://github.com"
+        #下载依赖
+      - name: Install dependencies
+        run:  go mod tidy
+        #编译
+      - name: build
+        run : CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .${{env.WORK_PATH}}
+        #将任何文件进行上传 可以在action后获取
+        #    - name: Upload
+        #      uses: actions/upload-artifact@v1
+        #      with:
+        #        name: oss
+        #        path: /home/runner/work/oss/oss/main
+        #登录阿里云镜像
+      - name: Login to ali cloud
+        uses: aliyun/acr-login@v1
+        with:
+          login-server: registry.cn-hangzhou.aliyuncs.com
+          region-id: cn-hangzhou
+          username: ${{ secrets.ALIBABA_CLOUD_USERNAME }}
+          password: ${{ secrets.ALIBABA_CLOUD_PASSWORD }}
+        #构建成docker镜像
+      - name: Build and push docker image
+        env:
+          #使用github的commit分支id
+          IMAGE_TAG: ${{github.sha}}
+          #docker build 构建docker镜像 -t自定义标签(镜像id) .(使用当前目录为工作目录 github action默认为/home/runner/work/oss/oss/)
+        run: |
+          docker build -t registry.cn-hangzhou.aliyuncs.com/libong/test-rep:$IMAGE_TAG .
+          docker push registry.cn-hangzhou.aliyuncs.com/libong/test-rep:$IMAGE_TAG
