@@ -4,7 +4,7 @@
 name: GOGOGO
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
