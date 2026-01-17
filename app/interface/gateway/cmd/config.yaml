@@ -1,0 +1,37 @@
+Server:
+  HTTP:
+    Host: "0.0.0.0"
+    Port: 8002
+Service:
+  Dao:
+    Mysql:
+      Address: "127.0.0.1"
+      Port: 3306
+      Account: "AKA"
+      Password: "libong"
+      Database: "shoe_manager"
+    Redis:
+      Address: "127.0.0.1"
+      Port: 6379
+      Password: "tQF08UDhtu6g5VjghhYmag=="
+      Database: 0
+  RBACService:
+    Host: "0.0.0.0"
+    Port: 9000
+  OssService:
+    Host: "0.0.0.0"
+    Port: 9001
+  SmsConfig:
+    Secret: "123"
+    Url: "123"
+  RoleServiceConfig:
+    CanOperateRoles:
+      - manager
+  WechatConfig:
+#    AppKey: "wx12cfb440dbd7702b"
+#    AppSecret: "2ba44ab007ea10a714090b8b274b7477"
+    AppKey: "wx5899f83191f29a88"
+    AppSecret: "e664ad952722c40a8a0319d96f1d3e7e"
+
+
+LoginTokenExpireAt: 172800
