@@ -28,10 +28,6 @@ Service:
     CanOperateRoles:
       - manager
   WechatConfig:
-#    AppKey: "wx12cfb440dbd7702b"
-#    AppSecret: "2ba44ab007ea10a714090b8b274b7477"
     AppKey: "wx5899f83191f29a88"
     AppSecret: "e664ad952722c40a8a0319d96f1d3e7e"
-
-
 LoginTokenExpireAt: 172800

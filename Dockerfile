@@ -60,4 +60,4 @@ ENV GOLANG_PROTOBUF_REGISTRATION_CONFLICT=ignore
 #EXPOSE 8080
 # 定义容器运行时的命令
 ENTRYPOINT ["./main"]
-CMD ["-configPath","/etc/myconfig","-env","prod","-log","./log"]
+CMD ["-configPath","/etc/myconfig","-env","dev","-log","./log"]
