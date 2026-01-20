@@ -20,7 +20,6 @@ INNER JOIN (
     LIMIT ?, ?  -- 分页参数
 ) AS rel ON s.shoe_id = rel.shoe_id
 WHERE 1=1 
-
 `
 	countSql = `
 SELECT count(*)
@@ -34,11 +33,11 @@ INNER JOIN (
 WHERE 1=1 
 `
 	materialCondition  = ` and s.material like ?`
-	shoeSizeCondition  = ` and s.hoe_size like ?`
+	shoeSizeCondition  = ` and s.shoe_size like ?`
 	shapeCodeCondition = ` and s.shape_code like ?`
 	isHotCondition     = ` and s.is_hot = ?`
 	isPresaleCondition = ` and s.is_presale = ?`
-	finalSql           = `ORDER BY s.created_at DESC;`
+	finalSql           = ` ORDER BY s.created_at DESC;`
 	finalTag           = `;`
 )
 
@@ -90,25 +89,20 @@ func SearchAccountShoeJoin(ctx context.Context, req *api.SearchShoesPageReq) (*s
 	}
 
 	originSql += finalSql
-	countSql += finalTag
+	originCountSql += finalTag
 	resp := &serviceApi.SearchShoesPageResp{}
 	var total int64
-	row := client.Context(ctx).Raw(countSql, countArgs...).Row()
+	row := client.Context(ctx).Raw(originCountSql, countArgs...).Row()
 	err := row.Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
-	rows, err := client.Context(ctx).Raw(sql, args...).Rows()
+	if total == 0 {
+		return resp, total, nil
+	}
+	err = client.Context(ctx).Raw(originSql, args...).Scan(&resp.List).Error
 	if err != nil {
 		return nil, 0, err
-	}
-	for rows.Next() {
-		respApi := &serviceApi.Shoe{}
-		err = rows.Scan(respApi)
-		if err != nil {
-			return nil, 0, err
-		}
-		resp.List = append(resp.List, respApi)
 	}
 	return resp, total, nil
 }
