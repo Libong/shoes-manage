@@ -49,7 +49,7 @@ FROM alpine AS runner
 MAINTAINER libong
 #修改Alpine Linux的APK源，将其从默认的dl-cdn.alpinelinux.org更换为阿里云的镜像源mirrors.aliyun.com 加速后续下载其他软件包的速度
 RUN set -ex \
-    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 #时区包
 RUN apk add --no-cache tzdata
 #将编译好的执行文件拷贝到docker容器指定位置
