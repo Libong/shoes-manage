@@ -73,6 +73,12 @@ func (s *Service) DeleteShoe(ctx context.Context, req *api.DeleteShoeReq) error 
 	if err != nil {
 		return err
 	}
+	_, err = s.shoeService.DeleteAccountShoe(ctx, &shoeServiceApi.DeleteAccountShoeReq{
+		ShoeIds: []string{req.ShoeId},
+	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (s *Service) SearchShoesPage(ctx context.Context, req *api.SearchShoesPageReq) (*api.SearchShoesPageResp, error) {
@@ -279,6 +285,16 @@ func (s *Service) ChangeShoeFavour(ctx context.Context, req *api.ChangeShoeFavou
 		return errors.AccountNotExist
 	}
 	uid := ctx.User().UID
+	if !req.IsFavour {
+		_, err := s.shoeService.DeleteAccountShoe(ctx, &shoeServiceApi.DeleteAccountShoeReq{
+			AccountIds: []string{uid},
+			ShoeIds:    req.ShoeIds,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	existShoeFavourMap := make(map[string]uint32)
 	searchAccountShoesResp, err := s.shoeService.SearchAccountShoes(ctx, &shoeServiceApi.SearchAccountShoesReq{
 		AccountIds: []string{uid},
@@ -287,10 +303,8 @@ func (s *Service) ChangeShoeFavour(ctx context.Context, req *api.ChangeShoeFavou
 	if err != nil {
 		return err
 	}
-	var deleteShoeIds []string
 	for _, accountShoe := range searchAccountShoesResp.List {
 		existShoeFavourMap[accountShoe.ShoeId]++
-		deleteShoeIds = append(deleteShoeIds, accountShoe.ShoeId)
 	}
 	var addAccountShoes []*shoeServiceApi.AccountShoe
 	for _, changeShoeId := range req.ShoeIds {
@@ -304,15 +318,6 @@ func (s *Service) ChangeShoeFavour(ctx context.Context, req *api.ChangeShoeFavou
 	if len(addAccountShoes) != 0 {
 		_, err = s.shoeService.BatchAddAccountShoe(ctx, &shoeServiceApi.BatchAddAccountShoeReq{
 			List: addAccountShoes,
-		})
-		if err != nil {
-			return err
-		}
-	}
-	if len(deleteShoeIds) != 0 {
-		_, err = s.shoeService.DeleteAccountShoe(ctx, &shoeServiceApi.DeleteAccountShoeReq{
-			AccountIds: []string{uid},
-			ShoeIds:    deleteShoeIds,
 		})
 		if err != nil {
 			return err

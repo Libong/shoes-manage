@@ -16,10 +16,10 @@ INNER JOIN (
     -- 先分页获取用户收藏的物品ID
     SELECT shoe_id
     FROM account_shoe
-    WHERE account_id = ?  -- 当前用户ID
+    WHERE account_id = ? and deleted_at is null  -- 当前用户ID
     LIMIT ?, ?  -- 分页参数
 ) AS rel ON s.shoe_id = rel.shoe_id
-WHERE 1=1 
+WHERE s.deleted_at is null
 `
 	countSql = `
 SELECT count(*)
@@ -28,9 +28,9 @@ INNER JOIN (
     -- 先分页获取用户收藏的物品ID
     SELECT shoe_id
     FROM account_shoe
-    WHERE account_id = ?  -- 当前用户ID
+    WHERE account_id = ? and deleted_at is null  -- 当前用户ID
 ) AS rel ON s.shoe_id = rel.shoe_id
-WHERE 1=1 
+WHERE s.deleted_at is null
 `
 	materialCondition  = ` and s.material like ?`
 	shoeSizeCondition  = ` and s.shoe_size like ?`
