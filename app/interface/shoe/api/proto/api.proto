@@ -67,6 +67,13 @@ service ShoeInterface{
       post:"/favour"
     };
   }
+  //下拉选项
+  rpc searchSelectList(SearchSelectListReq) returns(SearchSelectListResp){
+    option (libong.auth) = true;
+    option(google.api.http) = {
+      get:"/selectList/search"
+    };
+  }
 }
 message AddShoeReq{
   string shape_code = 2; // 形体编码
@@ -97,6 +104,7 @@ message SearchShoesPageReq{
   uint32 is_hot = 4; //是否热门 1是 2否
   uint32 is_presale = 5;//是否预售 1是 2否
   bool by_favour = 6; //收藏的
+  bool has_file = 7; //无文件
 
   uint32 page_num = 100;
   uint32 page_size = 101;
@@ -146,4 +154,13 @@ message UpdateShoeHotReq{
 message ChangeShoeFavourReq{
   repeated string shoe_ids = 1;
   bool is_favour = 2; //是否收藏
+}
+message SearchSelectListReq{
+  uint32 select_type = 1; //1.形体
+}
+message SelectList{
+  repeated string items = 1;
+}
+message SearchSelectListResp{
+  map<string,SelectList> map = 1;
 }

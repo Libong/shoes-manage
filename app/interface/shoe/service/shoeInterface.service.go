@@ -3,6 +3,8 @@ package service
 import (
 	"encoding/json"
 	"libong/common/context"
+	commonMysql "libong/common/orm/mysql"
+	commonRedis "libong/common/redis"
 	"shoe-manager/app/interface/shoe/api"
 	"shoe-manager/app/interface/shoe/dao"
 	shoeServiceApi "shoe-manager/app/service/shoe/api"
@@ -10,54 +12,124 @@ import (
 	ossServiceApi "shoe-manager/rpc/oss/api"
 )
 
+const updateScript = `
+local key = ARGV[1]
+local delta = tonumber(ARGV[2])  -- 正数表示加，负数表示减
+local hash_key = 'shapeCode:stat'
+
+local current = redis.call('HGET', hash_key, key) or 0
+current = tonumber(current)
+local newVal = current + delta
+
+if newVal == 0 then
+    redis.call('HDEL', hash_key, key)
+    redis.call('SREM', 'shapeCodeList', key)
+    return 0
+else
+    redis.call('HSET', hash_key, key, newVal)
+    redis.call('SADD', 'shapeCodeList', key)
+    return newVal
+end
+`
+
+var (
+	ShapeCodeListKey = "shapeCodeList"
+)
+
 func (s *Service) AddShoe(ctx context.Context, req *api.AddShoeReq) error {
 	if req.ShoeSize == "" || req.Material == "" || req.ShapeCode == "" {
 		return errors.ParamErrorOrEmpty
 	}
-	picturesBytes, err := json.Marshal(req.Pictures)
-	if err != nil {
-		return err
-	}
-	videosBytes, err := json.Marshal(req.Videos)
-	if err != nil {
-		return err
-	}
-	_, err = s.shoeService.AddShoe(ctx, &shoeServiceApi.AddShoeReq{
+
+	reqApi := &shoeServiceApi.AddShoeReq{
 		ShapeCode: req.ShapeCode,
 		Material:  req.Material,
 		ShoeSize:  req.ShoeSize,
-		Pictures:  string(picturesBytes),
-		Videos:    string(videosBytes),
 		IsHot:     req.IsHot,
 		IsPresale: req.IsPresale,
-	})
+	}
+	if len(req.Pictures) != 0 {
+		picturesBytes, err := json.Marshal(req.Pictures)
+		if err != nil {
+			return err
+		}
+		reqApi.Pictures = string(picturesBytes)
+	}
+	if len(req.Videos) != 0 {
+		videosBytes, err := json.Marshal(req.Videos)
+		if err != nil {
+			return err
+		}
+		reqApi.Videos = string(videosBytes)
+	}
+	_, err := s.shoeService.AddShoe(ctx, reqApi)
 	if err != nil {
 		return err
 	}
+	//var args []interface{}
+	//args = append(args, req.ShapeCode)
+	//args = append(args, 1)
+	//_, err = commonRedis.RedisClient.DoScript(ctx, ShapeCodeListKey, args)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 func (s *Service) UpdateShoe(ctx context.Context, req *api.UpdateShoeReq) error {
 	if req.ShoeSize == "" || req.Material == "" || req.ShapeCode == "" || req.ShoeId == "" {
 		return errors.ParamErrorOrEmpty
 	}
-	picturesBytes, err := json.Marshal(req.Pictures)
+
+	shoeByIdResp, err := s.shoeService.ShoeById(ctx, &shoeServiceApi.ShoeByIdReq{
+		Id: req.ShoeId,
+	})
 	if err != nil {
 		return err
 	}
-	videosBytes, err := json.Marshal(req.Videos)
-	if err != nil {
-		return err
+	if shoeByIdResp.Shoe == nil {
+		return errors.ShoeNotExist
 	}
-	_, err = s.shoeService.UpdateShoe(ctx, &shoeServiceApi.UpdateShoeReq{
+
+	reqApi := &shoeServiceApi.UpdateShoeReq{
 		ShoeId:    req.ShoeId,
 		ShapeCode: req.ShapeCode,
 		Material:  req.Material,
 		ShoeSize:  req.ShoeSize,
-		Pictures:  string(picturesBytes),
-		Videos:    string(videosBytes),
 		IsHot:     req.IsHot,
 		IsPresale: req.IsPresale,
-	})
+	}
+	if len(req.Pictures) != 0 {
+		picturesBytes, err := json.Marshal(req.Pictures)
+		if err != nil {
+			return err
+		}
+		reqApi.Pictures = string(picturesBytes)
+	}
+	if len(req.Videos) != 0 {
+		videosBytes, err := json.Marshal(req.Videos)
+		if err != nil {
+			return err
+		}
+		reqApi.Videos = string(videosBytes)
+	}
+
+	if req.ShapeCode != shoeByIdResp.Shoe.ShapeCode {
+		var addArgs []interface{}
+		addArgs = append(addArgs, req.ShapeCode)
+		addArgs = append(addArgs, 1)
+		_, err = commonRedis.RedisClient.DoScript(ctx, ShapeCodeListKey, addArgs)
+		if err != nil {
+			return err
+		}
+		var delArgs []interface{}
+		delArgs = append(delArgs, shoeByIdResp.Shoe.ShapeCode)
+		delArgs = append(delArgs, -1)
+		_, err = commonRedis.RedisClient.DoScript(ctx, ShapeCodeListKey, delArgs)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = s.shoeService.UpdateShoe(ctx, reqApi)
 	if err != nil {
 		return err
 	}
@@ -67,7 +139,16 @@ func (s *Service) DeleteShoe(ctx context.Context, req *api.DeleteShoeReq) error 
 	if req.ShoeId == "" {
 		return errors.ParamErrorOrEmpty
 	}
-	_, err := s.shoeService.DeleteShoe(ctx, &shoeServiceApi.DeleteShoeReq{
+	shoeByIdResp, err := s.shoeService.ShoeById(ctx, &shoeServiceApi.ShoeByIdReq{
+		Id: req.ShoeId,
+	})
+	if err != nil {
+		return err
+	}
+	if shoeByIdResp.Shoe == nil {
+		return errors.ShoeNotExist
+	}
+	_, err = s.shoeService.DeleteShoe(ctx, &shoeServiceApi.DeleteShoeReq{
 		Ids: []string{req.ShoeId},
 	})
 	if err != nil {
@@ -79,9 +160,19 @@ func (s *Service) DeleteShoe(ctx context.Context, req *api.DeleteShoeReq) error 
 	if err != nil {
 		return err
 	}
+	//var args []interface{}
+	//args = append(args, shoeByIdResp.Shoe.ShoeSize)
+	//args = append(args, -1)
+	//_, err = commonRedis.RedisClient.DoScript(ctx, ShapeCodeListKey, args)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 func (s *Service) SearchShoesPage(ctx context.Context, req *api.SearchShoesPageReq) (*api.SearchShoesPageResp, error) {
+	if req.PageNum == 0 || req.PageSize == 0 {
+		return nil, errors.ParamErrorOrEmpty
+	}
 	resp := &api.SearchShoesPageResp{}
 	var searchShoesPageResp *shoeServiceApi.SearchShoesPageResp
 	var err error
@@ -147,27 +238,29 @@ func (s *Service) SearchShoesPage(ctx context.Context, req *api.SearchShoesPageR
 		if !req.ByFavour && favourShoeMap[shoe.ShoeId] == 0 {
 			respShoe.IsFavour = false
 		}
-		if shoe.Pictures != "" {
-			err = json.Unmarshal([]byte(shoe.Pictures), &respShoe.Pictures)
-			if err != nil {
-				return nil, err
+		if req.HasFile {
+			if shoe.Pictures != "" {
+				err = json.Unmarshal([]byte(shoe.Pictures), &respShoe.Pictures)
+				if err != nil {
+					return nil, err
+				}
 			}
-		}
-		if shoe.Videos != "" {
-			err = json.Unmarshal([]byte(shoe.Videos), &respShoe.Videos)
-			if err != nil {
-				return nil, err
+			if shoe.Videos != "" {
+				err = json.Unmarshal([]byte(shoe.Videos), &respShoe.Videos)
+				if err != nil {
+					return nil, err
+				}
 			}
-		}
-		for _, picture := range respShoe.Pictures {
-			fileIds = append(fileIds, picture.Id)
-		}
-		for _, video := range respShoe.Videos {
-			fileIds = append(fileIds, video.Id)
+			for _, picture := range respShoe.Pictures {
+				fileIds = append(fileIds, picture.Id)
+			}
+			for _, video := range respShoe.Videos {
+				fileIds = append(fileIds, video.Id)
+			}
 		}
 		resp.List = append(resp.List, respShoe)
 	}
-	if len(fileIds) != 0 {
+	if len(fileIds) != 0 && req.HasFile {
 		makeFileUrlResp, err := s.ossService.MakeFileUrl(ctx, &ossServiceApi.MakeFileUrlReq{
 			Keys: fileIds,
 		})
@@ -324,4 +417,46 @@ func (s *Service) ChangeShoeFavour(ctx context.Context, req *api.ChangeShoeFavou
 		}
 	}
 	return nil
+}
+func (s *Service) SearchSelectList(ctx context.Context, req *api.SearchSelectListReq) (*api.SearchSelectListResp, error) {
+	//members, err := commonRedis.RedisClient.SMembers(ctx, ShapeCodeListKey)
+	//if err != nil {
+	//	return nil, err
+	//}
+	resp, err := statSelectShapeCode()
+	if err != nil {
+		return nil, err
+	}
+	return &api.SearchSelectListResp{
+		Map: resp,
+	}, nil
+}
+
+var (
+	shapeCodeStat = `
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY shape_code ORDER BY created_at DESC) as rn
+    FROM shoe
+    WHERE deleted_at IS NULL
+) t WHERE rn = 1;
+`
+)
+
+func statSelectShapeCode() (map[string]*api.SelectList, error) {
+	client := commonMysql.MysqlClient
+	respMap := make(map[string]*api.SelectList)
+	var respList []*shoeServiceApi.Shoe
+	err := client.Raw(shapeCodeStat).Scan(&respList).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range respList {
+		if respMap[item.Material] == nil {
+			respMap[item.Material] = &api.SelectList{}
+		}
+		respMap[item.Material].Items = append(respMap[item.Material].Items, item.ShapeCode)
+	}
+	return respMap, nil
 }

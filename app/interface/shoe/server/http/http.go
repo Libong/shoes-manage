@@ -32,5 +32,6 @@ func ConfigHttp(s *service.Service, server *http.Server) *http.Server {
 	group.GET("/get", shoeById)
 	group.POST("/update/hot", updateShoeHot)
 	group.POST("/favour", changeShoeFavour)
+	group.GET("/selectList/search", searchSelectList)
 	return server
 }

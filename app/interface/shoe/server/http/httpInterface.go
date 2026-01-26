@@ -117,3 +117,19 @@ func changeShoeFavour(ctx *http.Context) error {
 	ctx.ResponseData(nil)
 	return nil
 }
+func searchSelectList(ctx *http.Context) error {
+	var (
+		req  = &api.SearchSelectListReq{}
+		resp *api.SearchSelectListResp
+		err  error
+	)
+	err = ctx.MarshalGet(req)
+	if err != nil {
+		return err
+	}
+	if resp, err = svc.SearchSelectList(context.FromHTTPContext(ctx), req); err != nil {
+		return err
+	}
+	ctx.ResponseData(resp)
+	return nil
+}
