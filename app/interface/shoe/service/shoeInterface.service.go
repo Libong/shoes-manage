@@ -437,7 +437,7 @@ var (
 SELECT *
 FROM (
     SELECT *,
-           ROW_NUMBER() OVER (PARTITION BY shape_code ORDER BY created_at DESC) as rn
+           ROW_NUMBER() OVER (PARTITION BY material,shape_code) as rn
     FROM shoe
     WHERE deleted_at IS NULL
 ) t WHERE rn = 1;
